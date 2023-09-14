@@ -169,7 +169,7 @@ public abstract class RenderGlobalMixin {
                 }
             }
 
-            batch.draw(false);
+            batch.draw();
         } else {
             for (int i = min; i < max; i++) {
                 ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
@@ -202,7 +202,7 @@ public abstract class RenderGlobalMixin {
 
     @Inject(at = @At("TAIL"), method = "loadRenderers")
     public void postLoad(CallbackInfo ci) {
-        if (worldObj != null)
-            batch = new ChunkBatch(new Batch[renderChunksDeep * renderChunksWide], renderChunksTall);
+        if (worldObj != null && Config.useBatching)
+            batch = new ChunkBatch(new Batch[Config.maxBatches], renderChunksTall);
     }
 }

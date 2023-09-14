@@ -3,6 +3,7 @@ package tfc.vob.mixin;
 import net.minecraft.client.render.DisplayList;
 import net.minecraft.client.render.RenderGlobal;
 import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.core.entity.CameraSorter;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

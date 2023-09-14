@@ -4,6 +4,7 @@
   "package": "tfc.vob.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "CameraSorterMixin"
   ],
   "client": [
     "ChunkRendererMixin",
