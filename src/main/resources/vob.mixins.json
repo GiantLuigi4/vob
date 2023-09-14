@@ -4,14 +4,14 @@
   "package": "tfc.vob.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "CameraSorterMixin"
   ],
   "client": [
     "ChunkRendererMixin",
     "DisplayListMixin",
     "RenderGlobalMixin",
     "TessellatorMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "CameraSorterMixin"
   ],
   "injectors": {
     "defaultRequire": 1

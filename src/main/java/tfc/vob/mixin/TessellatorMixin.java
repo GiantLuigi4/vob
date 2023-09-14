@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import tfc.vob.Config;
 import tfc.vob.itf.TesselatorExtensions;
 
 import java.nio.ByteBuffer;
@@ -59,9 +60,11 @@ public abstract class TessellatorMixin implements TesselatorExtensions {
 
     @Inject(at = @At("TAIL"), method = "<init>")
     public void postInit(int bufferSize, CallbackInfo ci) {
-        this.useVBO = true;
-        this.vertexBuffers = GLAllocation.createDirectIntBuffer(this.vboCount);
-        ARBVertexBufferObject.glGenBuffersARB(this.vertexBuffers);
+        if (Config.useVAOs) {
+            this.useVBO = true;
+            this.vertexBuffers = GLAllocation.createDirectIntBuffer(this.vboCount);
+            ARBVertexBufferObject.glGenBuffersARB(this.vertexBuffers);
+        }
     }
 
     @Override
