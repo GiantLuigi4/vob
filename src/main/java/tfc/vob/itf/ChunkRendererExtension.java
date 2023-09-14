@@ -1,4 +1,4 @@
-package turniplabs.examplemod.itf;
+package tfc.vob.itf;
 
 public interface ChunkRendererExtension {
     void draw(int pass);

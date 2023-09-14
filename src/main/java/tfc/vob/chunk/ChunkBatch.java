@@ -1,15 +1,8 @@
-package turniplabs.examplemod.chunk;
+package tfc.vob.chunk;
 
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
-import net.minecraft.client.GLAllocation;
-import net.minecraft.core.util.phys.Vec3d;
 import org.lwjgl.opengl.ARBVertexBufferObject;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector2f;
 
-import java.lang.reflect.Array;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ChunkBatch {

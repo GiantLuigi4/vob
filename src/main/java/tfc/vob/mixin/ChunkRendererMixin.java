@@ -1,21 +1,24 @@
-package turniplabs.examplemod.mixin;
+package tfc.vob.mixin;
 
 import net.minecraft.client.render.ChunkRenderer;
+import net.minecraft.client.render.RenderEngine;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.core.world.World;
 import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.ARBVertexBufferObject;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import turniplabs.examplemod.ExampleMod;
-import turniplabs.examplemod.itf.ChunkRendererExtension;
-import turniplabs.examplemod.itf.TesselatorExtensions;
+import tfc.vob.Config;
+import tfc.vob.itf.ChunkRendererExtension;
+import tfc.vob.itf.TesselatorExtensions;
+
+import java.util.List;
 
 @Mixin(value = ChunkRenderer.class, remap = false)
 public abstract class ChunkRendererMixin implements ChunkRendererExtension {
@@ -56,15 +59,21 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
     public int posYMinus;
     @Shadow
     public int posZMinus;
-    int[] vbo = new int[]{-1, 0};
-    int[] vbo1 = new int[]{-1, 0};
+    int[] vbo;
+    int[] vbo1;
 
-    int vao = ExampleMod.useVAOs ? ARBVertexArrayObject.glGenVertexArrays() : -1;
+    int vao;
+
+    @Inject(at = @At("TAIL"), method = "<init>")
+    public void postInit(RenderEngine renderEngine, World world, List list, int posX, int posY, int posZ, int size, int renderList, CallbackInfo ci) {
+        vbo = new int[]{-1, 0, 4};
+        vbo1 = new int[]{-1, 0, 4};
+        vao = Config.useVAOs ? ARBVertexArrayObject.glGenVertexArrays() : -1;
+    }
 
     @Inject(at = @At("HEAD"), method = "updateRenderer")
     public void preUR(CallbackInfo ci) {
-        if (!ExampleMod.useVAOs) return;
-        ExampleMod.WorldDraw = true;
+        if (!Config.useVAOs) return;
 
         ARBVertexArrayObject.glBindVertexArray(vao);
         GL11.glTexCoordPointer(2, 5126, 32, 12L);
@@ -77,12 +86,11 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
 
     @Inject(at = @At("RETURN"), method = "updateRenderer")
     public void postUR(CallbackInfo ci) {
-        if (!ExampleMod.useVAOs) return;
+        if (!Config.useVAOs) return;
         GL11.glDisableClientState(32888);
         GL11.glDisableClientState(32886);
         GL11.glDisableClientState(32884);
         tessellator.setTranslation(0, 0, 0);
-        ExampleMod.WorldDraw = false;
         ARBVertexArrayObject.glBindVertexArray(0);
     }
 
@@ -90,28 +98,28 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
 
     @Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glNewList(II)V"))
     public void noList(int list, int mode) {
-        if (!ExampleMod.useVAOs) GL11.glNewList(list, mode);
+//        if (!Config.useVAOs)
+        GL11.glNewList(list, mode);
         li = list;
         mod = mode;
     }
 
     @Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glEndList()V"))
     public void noList() {
-        if (!ExampleMod.useVAOs) {
-            GL11.glEndList();
-        }
+//        if (!Config.useVAOs)
+        GL11.glEndList();
     }
 
     @Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Tessellator;setTranslation(DDD)V"))
     public void preSetTranslation(Tessellator instance, double x, double y, double z) {
-        if (ExampleMod.useVAOs)
+        if (Config.useVAOs)
             instance.setTranslation(x + posXClip, y + posYClip, z + posZClip);
         else instance.setTranslation(x, y, z);
     }
 
     @Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Tessellator;draw()V"))
     public void draw(Tessellator instance) {
-        if (!ExampleMod.useVAOs) {
+        if (!Config.useVAOs) {
             instance.draw();
             return;
         }

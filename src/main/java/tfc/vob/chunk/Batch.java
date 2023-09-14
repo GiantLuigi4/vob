@@ -1,4 +1,4 @@
-package turniplabs.examplemod.chunk;
+package tfc.vob.chunk;
 
 public class Batch {
     int[][] vaos;

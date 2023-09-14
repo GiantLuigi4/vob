@@ -1,4 +1,4 @@
-package turniplabs.examplemod.mixin;
+package tfc.vob.mixin;
 
 import net.minecraft.client.render.DisplayList;
 import net.minecraft.client.render.RenderGlobal;

@@ -1,4 +1,4 @@
-package turniplabs.examplemod.mixin;
+package tfc.vob.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.ChunkRenderer;
@@ -6,7 +6,6 @@ import net.minecraft.client.render.DisplayList;
 import net.minecraft.client.render.RenderGlobal;
 import net.minecraft.client.render.camera.ICamera;
 import net.minecraft.core.world.World;
-import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -15,13 +14,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import turniplabs.examplemod.ExampleMod;
-import turniplabs.examplemod.chunk.Batch;
-import turniplabs.examplemod.chunk.ChunkBatch;
-import turniplabs.examplemod.itf.ChunkRendererExtension;
+import tfc.vob.Config;
+import tfc.vob.chunk.Batch;
+import tfc.vob.chunk.ChunkBatch;
+import tfc.vob.itf.ChunkRendererExtension;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Mixin(value = RenderGlobal.class, remap = false)
@@ -74,7 +71,7 @@ public abstract class RenderGlobalMixin {
         this.glRenderLists.clear();
         int addedWorldRenderers = 0;
 
-        if (!ExampleMod.useVAOs) {
+        if (!Config.useVAOs) {
             for (int i = max - 1; i >= min; --i) {
                 if (renderPass == 0) {
                     ++this.renderersLoaded;
@@ -141,24 +138,47 @@ public abstract class RenderGlobalMixin {
         GL11.glEnableClientState(32886);
         GL11.glEnableClientState(32884);
 
-//        batch.clear();
-//        int lx = Integer.MIN_VALUE;
-//        int ly = Integer.MAX_VALUE;
-        for (int i = min; i < max; i++) {
-            ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
-            if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
-//                if (lx != sortedChunkRenderer.posXMinus || ly != sortedChunkRenderer.posZMinus) {
-//                    lx = sortedChunkRenderer.posXMinus;
-//                    ly = sortedChunkRenderer.posZMinus;
-//                    batch.nextColumn(lx, ly);
-//                }
+        if (Config.useBatching) {
+            batch.clear();
+            int lx = Integer.MIN_VALUE;
+            int ly = Integer.MAX_VALUE;
+            for (int i = min; i < max; i++) {
+                ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
+                if (renderPass == 0) {
+                    ++this.renderersLoaded;
+                    if (sortedChunkRenderer.skipRenderPass[renderPass]) {
+                        ++this.renderersSkippingRenderPass;
+                    } else if (!sortedChunkRenderer.isInFrustum) {
+                        ++this.renderersBeingClipped;
+                    } else if (this.occlusionEnabled && !sortedChunkRenderer.isVisible) {
+                        ++this.renderersBeingOccluded;
+                    } else {
+                        ++this.renderersBeingRendered;
+                    }
+                }
 
-                ((ChunkRendererExtension) sortedChunkRenderer).draw(renderPass);
-//                batch.add(((ChunkRendererExtension) sortedChunkRenderer).getVao(renderPass));
-                addedWorldRenderers++;
+                if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
+                    if (lx != sortedChunkRenderer.posXMinus || ly != sortedChunkRenderer.posZMinus) {
+                        lx = sortedChunkRenderer.posXMinus;
+                        ly = sortedChunkRenderer.posZMinus;
+                        batch.nextColumn(lx, ly);
+                    }
+
+                    batch.add(((ChunkRendererExtension) sortedChunkRenderer).getVao(renderPass));
+                    addedWorldRenderers++;
+                }
+            }
+
+            batch.draw(false);
+        } else {
+            for (int i = min; i < max; i++) {
+                ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
+                if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
+                    ((ChunkRendererExtension) sortedChunkRenderer).draw(renderPass);
+                    addedWorldRenderers++;
+                }
             }
         }
-//        batch.draw(false);
 
         GL11.glDisableClientState(32888);
         GL11.glDisableClientState(32886);

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
+  "id": "vob",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This mod aims to help new BTA modders.",
+  "name": "VOB",
+  "description": "A small optimization mod",
   "authors": [
-    "Turnip Labs"
+    "GiantLuigi4"
   ],
   "contact": {
     "homepage": "",
@@ -18,11 +18,11 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-        "turniplabs.examplemod.ExampleMod"
+      "tfc.vob.Config"
     ]
   },
   "mixins": [
-      "examplemod.mixins.json"
+    "vob.mixins.json"
   ],
 
   "depends": {
