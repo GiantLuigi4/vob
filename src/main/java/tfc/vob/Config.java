@@ -11,7 +11,7 @@ import java.util.Properties;
 public class Config implements ModInitializer {
     public static boolean useVAOs = true;
     public static boolean useBatching = false;
-	public static int maxBatches = 1;
+	public static int maxBatches = 64;
 	
 	@Override
     public void onInitialize() {
