@@ -169,4 +169,11 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
     public int[] getVao(int pass) {
         return pass == 0 ? vbo1 : vbo;
     }
+
+    @Override
+    public void close() {
+        if (vbo[0] >= 0) ARBVertexBufferObject.glDeleteBuffersARB(vbo[0]);
+        if (vbo1[0] >= 0) ARBVertexBufferObject.glDeleteBuffersARB(vbo1[0]);
+        if (vao >= 0) ARBVertexArrayObject.glDeleteVertexArrays(vao);
+    }
 }
