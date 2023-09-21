@@ -6,14 +6,29 @@ Dependent on hardware, this mod can offer a change in fps anywhere from reducing
 
 What VOB does, is it swaps BTA from using drawLists (GL11 feature) to using VAOs (GL30 feature if I remember correctly)
 
+# VAO's
 
 Through tests haven't really been performed, but so far I've constructed this list of GPUs for whether VOB helps
 
 ```diff
-+ iGPU: Intel(R) HD Graphics 530
+NVIDIA:
 + dGPU: NVIDIA GeForce GTX 1650 (PCIe/SSE2)
-- iGPU: AMD Radeon(TM) Graphics
++ dGPU: (with batching) NVIDIA GeForce RTX 3080 (PCIe/SSE2)
+= NVIDIA GeForce 9600 GT (PCIe/SSE)
+
+Intel:
++ iGPU: (my laptop's GPU, gets nearly a 3x performance boost) Intel(R) HD Graphics 530
++ iGPU: Intel(R) UHD Graphics 610 (CFL GT1)
 - iGPU: Intel(R) UHD Graphics 770 (ADL-5 GT1)
 ```
 
-Granted, I'm not sure yet if the GPU is actually the deciding factor, or if there's more important components to look at
+Summary:
+- Intel: Most known GPUs benefit from it, it seems like there's gonna be a cutoff point somewhere between 610 and 770
+- AMD: Nothing is known for AMD
+- NVIDIA: so far all NVIDIA GPUs benefit from it (or have remained at pretty much the same performance, with maybe a slight improvement)
+- Steamdeck: gains ~20 fps, however batching hurts performance
+
+# Instanced Entity Rendering
+An upcoming feature of VOB, is instanced entity rendering
+
+This can bring the game from ~16 fps with 500 pigs to ~25 with 600 or ~28 with 500
