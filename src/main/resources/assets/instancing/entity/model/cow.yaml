@@ -1,6 +1,6 @@
 shader:
-  vertex: "shader/cow.vsh"
-  fragment: "base.fsh"
+  vertex: "entity/shader/cow.vsh"
+  fragment: "entity/base.fsh"
   max_instances: "100"
 
 model:

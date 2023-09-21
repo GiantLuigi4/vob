@@ -24,10 +24,10 @@ public class InstanceModel {
     int vao;
     int[] vbo;
 
-    public InstanceModel(String name) {
+    public InstanceModel(String category, String name) {
         try {
             InputStream strm = InstanceModel.class.getClassLoader()
-                    .getResourceAsStream("assets/instancing/model/" + name + ".yaml");
+                    .getResourceAsStream("assets/instancing/" + category + "/model/" + name + ".yaml");
             byte[] data = new byte[strm.available()];
             strm.read(data);
             strm.close();
@@ -201,5 +201,11 @@ public class InstanceModel {
 
     public void matrix(FloatBuffer proj, FloatBuffer modl) {
         shader.matrix(proj, modl);
+    }
+
+    public void close() {
+        shader.delete();
+        ARBVertexArrayObject.glDeleteVertexArrays(vao);
+        ARBVertexBufferObject.glDeleteBuffersARB(vbo[0]);
     }
 }

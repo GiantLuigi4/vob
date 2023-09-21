@@ -1,12 +1,12 @@
 import net.minecraft.client.render.Vertex;
 import net.minecraft.client.render.model.Cube;
-import net.minecraft.client.render.model.ModelCow;
+import net.minecraft.client.render.model.ModelSquid;
 
 import java.lang.reflect.Field;
 
 public class ModelConverter {
     public static void main(String[] args) {
-        ModelCow model = new ModelCow();
+        ModelSquid model = new ModelSquid();
         Class<?> clazz = model.getClass();
 
         StringBuilder output = new StringBuilder();

@@ -1,6 +1,6 @@
 shader:
-  vertex: "shader/pig.vsh"
-  fragment: "base.fsh"
+  vertex: "entity/shader/pig.vsh"
+  fragment: "entity/base.fsh"
   max_instances: "100"
 
 model:

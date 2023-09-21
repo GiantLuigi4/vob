@@ -1,0 +1,3 @@
+Chicken->chicken
+Cow->cow
+Pig->pig

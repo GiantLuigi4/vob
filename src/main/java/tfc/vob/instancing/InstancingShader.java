@@ -5,10 +5,8 @@ import net.minecraft.client.render.shader.Shader;
 import net.minecraft.core.util.phys.Vec3d;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Vector3f;
-import tfc.vob.instancing.model.InstanceModel;
 import tfc.vob.mixin.instancing.ShaderAccessor;
 
-import java.io.InputStream;
 import java.nio.FloatBuffer;
 
 public class InstancingShader {
@@ -17,19 +15,19 @@ public class InstancingShader {
     public InstancingShader() {
     }
 
-    protected static String read(String res) {
-        try {
-            InputStream strm = InstanceModel.class.getClassLoader()
-                    .getResourceAsStream("assets/instancing/" + res);
-            byte[] data = new byte[strm.available()];
-            strm.read(data);
-            strm.close();
-            return new String(data);
-        } catch (Throwable err) {
-            err.printStackTrace();
-            throw new RuntimeException(err);
-        }
-    }
+//    protected static String read(String res) {
+//        try {
+//            InputStream strm = InstanceModel.class.getClassLoader()
+//                    .getResourceAsStream("assets/instancing/" + res);
+//            byte[] data = new byte[strm.available()];
+//            strm.read(data);
+//            strm.close();
+//            return new String(data);
+//        } catch (Throwable err) {
+//            err.printStackTrace();
+//            throw new RuntimeException(err);
+//        }
+//    }
 
     public void parse(String fsh, String vsh) {
         if (sdr != null) sdr.delete();
@@ -37,8 +35,8 @@ public class InstancingShader {
         sdr = new Shader();
         sdr.compile(
                 string -> {
-                    if (string.endsWith(".fsh")) return read(fsh);
-                    if (string.endsWith(".vsh")) return read(vsh);
+                    if (string.endsWith(".fsh")) return new String(InstanceDispatcher.read("assets/instancing/" + fsh));
+                    if (string.endsWith(".vsh")) return new String(InstanceDispatcher.read("assets/instancing/" + vsh));
                     return null;
                 }, "shader"
         );
@@ -162,5 +160,9 @@ public class InstancingShader {
 
     public int getUniform(String name) {
         return sdr.getUniform(name);
+    }
+
+    public void delete() {
+        sdr.delete();
     }
 }
