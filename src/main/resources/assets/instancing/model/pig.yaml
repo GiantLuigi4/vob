@@ -1,0 +1,61 @@
+shader:
+  vertex: "shader/pig.vsh"
+  fragment: "base.fsh"
+  max_instances: "100"
+
+model:
+  head:
+    id: "0"
+    pivot: "0, 12, -6"
+    cube0:
+      uv: "0, 0"
+      coord: "-4, -4, -8"
+      size: "8, 8, 8"
+
+  nose:
+    id: "1"
+    pivot: "0, 12, -6"
+    cube0:
+      uv: "16, 16"
+      coord: "-2, 0, -9"
+      size: "4, 3, 1"
+
+  body:
+    id: "2"
+    pivot: "0, 11, 2"
+    cube0:
+      uv: "28, 8"
+      coord: "-5, -10, -7"
+      size: "10, 16, 8"
+
+  leg1:
+    id: "3"
+    pivot: "-3, 18, 7"
+    cube0:
+      uv: "0, 16"
+      coord: "-2, 0, -2"
+      size: "4, 6, 4"
+
+  leg2:
+    id: "4"
+    pivot: "3, 18, 7"
+    cube0:
+      uv: "0, 16"
+      coord: "-2, 0, -2"
+      size: "4, 6, 4"
+
+  leg3:
+    id: "5"
+    pivot: "-3, 18, -5"
+    cube0:
+      uv: "0, 16"
+      coord: "-2, 0, -2"
+      size: "4, 6, 4"
+
+  leg4:
+    id: "6"
+    pivot: "3, 18, -5"
+    cube0:
+      uv: "0, 16"
+      coord: "-2, 0, -2"
+      size: "4, 6, 4"
