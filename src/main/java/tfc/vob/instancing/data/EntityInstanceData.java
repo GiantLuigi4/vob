@@ -45,6 +45,7 @@ public class EntityInstanceData<T extends Entity> extends InstanceData<T> {
         float tickCount = entity.tickCount + renderPartialTicks;
 
         float hurt = 0;
+        float death = 0;
         if (living) {
             uform = uforms[0];
 
@@ -59,6 +60,7 @@ public class EntityInstanceData<T extends Entity> extends InstanceData<T> {
             //noinspection unchecked
             tickCount = ((LivingEntityRendererAccessor<EntityLiving>) renderer).callTicksExisted(living, renderPartialTicks);
             hurt = living.hurtTime + renderPartialTicks;
+            if (living.deathTime != 0) hurt = Math.max(hurt, death = (living.deathTime + renderPartialTicks));
         }
         uform = uforms[1];
         if (uform != -1) GL20.glUniform2f(uform + index, pitch, -(headYawOffset - yaw));
@@ -71,11 +73,15 @@ public class EntityInstanceData<T extends Entity> extends InstanceData<T> {
         uform = uforms[3];
         if (uform != -1) GL20.glUniform4f(uform + index, brightness, brightness, brightness, 1);
 
+        uform = uforms[5];
+        if (uform != -1) GL20.glUniform4f(uform + index, (float) (entity.bb.maxX - entity.bb.minX), (float) (entity.bb.maxY - entity.bb.minY), (float) ((entity.y + 1.5) - entity.bb.minY) * 16, 0);
+
         shader.matrix(
                 uforms[4], index,
                 Vec3d.createVector(x, y, z),
+                0,
                 (float) Math.toRadians(headYawOffset),
-                entity.xRot
+                death
         );
     }
 
@@ -106,6 +112,7 @@ public class EntityInstanceData<T extends Entity> extends InstanceData<T> {
                 shader.getUniform("tickData"),
                 shader.getUniform("colors"),
                 shader.getUniform("matrices"),
+                shader.getUniform("special"),
         };
     }
 }

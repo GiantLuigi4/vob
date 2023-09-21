@@ -36,7 +36,7 @@ public class InstanceModel {
             Hsml hsml = new Hsml(yml);
 
             Hsml sdr = hsml.getYaml("shader");
-            shader.parse(sdr.getText("fragment"), sdr.getText("vertex"));
+            shader.parse(category + "/" + name, sdr.getText("fragment"), sdr.getText("vertex"));
             maxInstances = Integer.parseInt(sdr.getText("max_instances"));
 
             Hsml theModel = hsml.getYaml("model");

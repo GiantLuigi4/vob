@@ -112,8 +112,9 @@ public class InstanceDispatcher<T> {
             String dat = new String(data);
             for (String s : dat.split("\n")) {
                 String[] split = s.trim().split("->");
+                //noinspection unchecked
                 ENTITY_MANAGER.loadModel(
-                        (Class<Entity>) EntityDispatcher.stringToClassMapping.get(split[0]),
+                         (Class<Entity>) EntityDispatcher.stringToClassMapping.get(split[0]),
                         split[1]
                 );
             }

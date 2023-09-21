@@ -17,6 +17,8 @@ uniform mat4[MAX_INSTANCES] matrices;
 uniform vec2[MAX_INSTANCES] limbData;
 // x=tickCount, y=dayTime, z=hurtTime
 uniform vec3[MAX_INSTANCES] tickData;
+// x=width, y=height, z=anchor offset, w=???
+uniform vec4[MAX_INSTANCES] special;
 
 // cube data
 uniform vec3[CUBE_COUNT] pivots;
@@ -33,6 +35,7 @@ out vec4 color;
 out vec3 normal;
 out vec2 texCoord;
 out vec4 worldCoord;
+flat out int entityId;
 
 uniform mat4 projMat;
 uniform mat4 modelViewMat;
@@ -81,8 +84,8 @@ void main() {
 
     //@formatter:off
     worldCoord =
-                ((Vertex * vec4(scale, 1.0) + vec4(offset, 0.0)) * calcMatr(rotation) + center) *
-                    matrices[ENTITY_ID];
+                (Vertex * calcMatr(rotation) + center - vec4(0, special[ENTITY_ID].z, 0, 0)) *
+                    matrices[ENTITY_ID] + vec4(0, special[ENTITY_ID].z, 0, 0);
     gl_Position = worldCoord * modelViewMat * projMat;
     color = colors[ENTITY_ID];
 
@@ -98,5 +101,6 @@ void main() {
     );
 
     texCoord = TexCoord.xy;
+    entityId = ENTITY_ID;
     //@formatter:on
 }

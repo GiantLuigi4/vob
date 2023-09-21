@@ -12,6 +12,7 @@
 uniform vec2[MAX_INSTANCES] facings;
 uniform vec4[MAX_INSTANCES] colors;
 uniform mat4[MAX_INSTANCES] matrices;
+uniform vec4[MAX_INSTANCES] special;
 
 uniform vec2[MAX_INSTANCES] limbData;
 uniform vec3[MAX_INSTANCES] tickData;
@@ -31,6 +32,7 @@ out vec4 color;
 out vec3 normal;
 out vec2 texCoord;
 out vec4 worldCoord;
+flat out int entityId;
 
 uniform mat4 projMat;
 uniform mat4 modelViewMat;
@@ -94,8 +96,8 @@ void main() {
 
     //@formatter:off
     worldCoord =
-                (Vertex * calcMatr(rotation) + center) *
-                    matrices[ENTITY_ID];
+                (Vertex * calcMatr(rotation) + center - vec4(0, special[ENTITY_ID].z, 0, 0)) *
+                    matrices[ENTITY_ID] + vec4(0, special[ENTITY_ID].z, 0, 0);
     gl_Position = worldCoord * modelViewMat * projMat;
     color = colors[ENTITY_ID];
 
@@ -111,5 +113,7 @@ void main() {
     );
 
     texCoord = TexCoord.xy;
+
+    entityId = ENTITY_ID;
     //@formatter:on
 }

@@ -2,9 +2,11 @@ package tfc.vob.instancing;
 
 import net.minecraft.client.GLAllocation;
 import net.minecraft.client.render.shader.Shader;
+import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.util.phys.Vec3d;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Vector3f;
+import tfc.vob.math.MatrixHelper;
 import tfc.vob.mixin.instancing.ShaderAccessor;
 
 import java.nio.FloatBuffer;
@@ -29,7 +31,7 @@ public class InstancingShader {
 //        }
 //    }
 
-    public void parse(String fsh, String vsh) {
+    public void parse(String name, String fsh, String vsh) {
         if (sdr != null) sdr.delete();
 
         sdr = new Shader();
@@ -38,7 +40,7 @@ public class InstancingShader {
                     if (string.endsWith(".fsh")) return new String(InstanceDispatcher.read("assets/instancing/" + fsh));
                     if (string.endsWith(".vsh")) return new String(InstanceDispatcher.read("assets/instancing/" + vsh));
                     return null;
-                }, "shader"
+                }, name
         );
     }
 
@@ -71,55 +73,50 @@ public class InstancingShader {
     }
 
     private static final FloatBuffer tmp = GLAllocation.createDirectFloatBuffer(16);
-
-    private static void merge(
-            FloatBuffer buf,
-            float m00, float m01, float m02,
-            float m10, float m11, float m12,
-            float m20, float m21, float m22
-    ) {
-        buf.put(0, m00);
-        buf.put(1, m01);
-        buf.put(2, m02);
-
-        buf.put(4, m10);
-        buf.put(5, m11);
-        buf.put(6, m12);
-
-        buf.put(8, m20);
-        buf.put(9, m21);
-        buf.put(10, m22);
-    }
+    private static final FloatBuffer tmp1 = GLAllocation.createDirectFloatBuffer(16);
 
     public void matrix(
             int uform,
             int index,
             Vec3d translation,
-            float yRot, float xRot
+            double height,
+            float yRot, float death
     ) {
         if (uform == -1) return;
         uform += index;
 
         tmp.position(0);
-        tmp.put(3, (float) (translation.xCoord * 16));
-        tmp.put(7, (float) (-translation.yCoord * 16));
-        tmp.put(11, (float) (-translation.zCoord * 16));
+        tmp1.position(0);
 
         tmp.put(12, 0);
         tmp.put(13, 0);
         tmp.put(14, 0);
         tmp.put(15, 1);
+        tmp1.put(15, 1);
 
         Vector3f axis = new Vector3f(0, 1, 0);
-        float s = (float) Math.sin(yRot);
-        float c = (float) Math.cos(yRot);
-        float oc = 1.0f - c;
+        MatrixHelper.rotationMatrix(tmp, axis, yRot);
 
-        merge(
-                tmp,
-                oc * axis.x * axis.x + c, oc * axis.x * axis.y - axis.z * s, oc * axis.z * axis.x + axis.y * s,
-                oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c, oc * axis.y * axis.z - axis.x * s,
-                oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s, oc * axis.z * axis.z + c);
+        if (death != 0) {
+            float f3 = (death - 1.0F) / 20.0F * 1.6F;
+            f3 = MathHelper.sqrt_float(f3);
+            if (f3 > 1.0F) {
+                f3 = 1.0F;
+            }
+            death = f3 * 90;
+
+            axis.set(0, 0, 1);
+            MatrixHelper.rotationMatrix(tmp1, axis, (float) Math.toRadians(death));
+            tmp1.position(0);
+
+            tmp.position(0);
+            MatrixHelper.mul(tmp1, tmp).store(tmp);
+            tmp.position(0);
+        }
+
+        tmp.put(3, (float) (translation.xCoord * 16));
+        tmp.put(7, (float) (-translation.yCoord * 16));
+        tmp.put(11, (float) (-translation.zCoord * 16));
 
         GL20.glUniformMatrix4(
                 uform, false,
