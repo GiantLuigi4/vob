@@ -6,10 +6,7 @@ import net.minecraft.client.render.DisplayList;
 import net.minecraft.client.render.RenderGlobal;
 import net.minecraft.client.render.camera.ICamera;
 import net.minecraft.core.world.World;
-import org.lwjgl.opengl.ARBVertexArrayObject;
-import org.lwjgl.opengl.ARBVertexBufferObject;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -74,7 +71,7 @@ public abstract class RenderGlobalMixin {
         this.glRenderLists.clear();
         int addedWorldRenderers = 0;
 
-        if (!Config.useVAOs) {
+        if (!Config.vobPipeline) {
             for (int i = max - 1; i >= min; --i) {
                 if (renderPass == 0) {
                     ++this.renderersLoaded;
@@ -186,7 +183,6 @@ public abstract class RenderGlobalMixin {
                         ++this.renderersBeingRendered;
                     }
                 }
-
                 if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
                     ((ChunkRendererExtension) sortedChunkRenderer).draw(renderPass);
                     addedWorldRenderers++;
@@ -204,7 +200,7 @@ public abstract class RenderGlobalMixin {
 
     @Inject(method = "sortAndRender", at = @At("HEAD"))
     public void preRender(ICamera camera, int renderPass, double renderPartialTicks, CallbackInfoReturnable<Integer> cir) {
-        if (Config.useVAOs) {
+        if (Config.vobPipeline) {
             if (Config.useBatching) {
                 double posX = this.mc.activeCamera.getX((float) renderPartialTicks);
                 double posY = this.mc.activeCamera.getY((float) renderPartialTicks);
@@ -226,7 +222,7 @@ public abstract class RenderGlobalMixin {
 
     @Inject(method = "sortAndRender", at = @At("RETURN"))
     public void postRender(ICamera camera, int renderPass, double renderPartialTicks, CallbackInfoReturnable<Integer> cir) {
-        if (Config.useVAOs) {
+        if (Config.vobPipeline) {
             if (Config.useBatching) {
                 batch.draw();
 

@@ -2,12 +2,12 @@ package tfc.vob.instancing.model;
 
 import net.minecraft.client.render.Tessellator;
 import org.lwjgl.opengl.ARBDrawInstanced;
-import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.ARBVertexBufferObject;
 import org.lwjgl.opengl.GL20;
 import tfc.vob.instancing.InstancingShader;
 import tfc.vob.instancing.yaml.Hsml;
 import tfc.vob.itf.TesselatorExtensions;
+import tfc.vob.util.VAOAllocator;
 
 import java.io.InputStream;
 import java.nio.FloatBuffer;
@@ -63,9 +63,9 @@ public class InstanceModel {
             throw new RuntimeException(err);
         }
 
-        vao = ARBVertexArrayObject.glGenVertexArrays();
+        vao = VAOAllocator.INSTANCE.generate();
 
-        ARBVertexArrayObject.glBindVertexArray(vao);
+        VAOAllocator.INSTANCE.bind(vao);
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
         for (ModelElement element : elements) {
@@ -81,7 +81,7 @@ public class InstanceModel {
             }
         }
         vbo = ((TesselatorExtensions) tessellator).genList(0, 0);
-        ARBVertexArrayObject.glBindVertexArray(0);
+        VAOAllocator.INSTANCE.bind(0);
     }
 
     public void bind() {
@@ -105,7 +105,7 @@ public class InstanceModel {
     }
 
     public void draw(int count) {
-        ARBVertexArrayObject.glBindVertexArray(vao);
+        VAOAllocator.INSTANCE.bind(vao);
         ARBVertexBufferObject.glBindBufferARB(34962, vbo[0]);
 
         GL20.glVertexAttribPointer(2, 2, 5126, false, 32, 12L);
@@ -123,7 +123,7 @@ public class InstanceModel {
 //            GL11.glDrawArrays(vbo[2], 0, vbo[1]);
         }
 
-        ARBVertexArrayObject.glBindVertexArray(0);
+        VAOAllocator.INSTANCE.bind(0);
     }
 
     private Vertex[] corners;
@@ -205,7 +205,7 @@ public class InstanceModel {
 
     public void close() {
         shader.delete();
-        ARBVertexArrayObject.glDeleteVertexArrays(vao);
+        VAOAllocator.INSTANCE.delete(vao);
         ARBVertexBufferObject.glDeleteBuffersARB(vbo[0]);
     }
 }

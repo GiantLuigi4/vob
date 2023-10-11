@@ -5,11 +5,11 @@
 uniform sampler2D colortex0;
 uniform vec3[MAX_INSTANCES] tickData;
 
-varying vec2 texCoord;
-varying vec4 color;
-varying vec4 worldCoord;
-varying vec3 normal;
-flat varying int entityId;
+in vec2 texCoord;
+in vec4 color;
+in vec4 worldCoord;
+in vec3 normal;
+flat in int entityId;
 
 out vec4 fragCol;
 
