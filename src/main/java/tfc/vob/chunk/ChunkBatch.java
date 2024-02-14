@@ -33,8 +33,7 @@ public class ChunkBatch {
 	
 	public void draw() {
 		if (numBatches == 0) return;
-		GL11.glDisableClientState(32885);
-		
+
 		GL11.glColorMask(true, true, true, true);
 		GL11.glPushMatrix();
 		for (int i = 0; i < numBatches; i++) {
@@ -47,7 +46,6 @@ public class ChunkBatch {
 
 				if (vob[3] != 0) {
 					VAOAllocator.INSTANCE.bind(vob[3]);
-					ARBVertexBufferObject.glBindBufferARB(34962, vob[0]);
 				} else {
 					ARBVertexBufferObject.glBindBufferARB(34962, vob[0]);
 					GL11.glTexCoordPointer(2, 5126, 32, 12L);
@@ -64,9 +62,9 @@ public class ChunkBatch {
 			GL11.glTranslatef(-vec.x, 0, -vec.z);
 		}
 		GL11.glPopMatrix();
-		
-		ARBVertexBufferObject.glBindBufferARB(34962, 0);
+
 		VAOAllocator.INSTANCE.bind(0);
+		ARBVertexBufferObject.glBindBufferARB(34962, 0);
 	}
 	
 	int colNo;

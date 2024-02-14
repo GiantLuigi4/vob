@@ -63,38 +63,29 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
     int[] vbo;
     int[] vbo1;
 
-    int vao;
-    boolean allowVao = false;
+    int vao, vao1;
+    boolean allowVao = true;
 
     @Inject(at = @At("TAIL"), method = "<init>")
     public void postInit(RenderEngine renderEngine, World world, List list, int posX, int posY, int posZ, int size, int renderList, CallbackInfo ci) {
         vbo = new int[]{-1, 0, 4, vao};
-        vbo1 = new int[]{-1, 0, 4, vao};
+        vbo1 = new int[]{-1, 0, 4, vao1};
         vao = Config.vobPipeline ? VAOAllocator.INSTANCE.generate() : -1;
+        vao1 = Config.vobPipeline ? VAOAllocator.INSTANCE.generate() : -1;
     }
 
     @Inject(at = @At("HEAD"), method = "updateRenderer")
     public void preUR(CallbackInfo ci) {
         if (!Config.vobPipeline) return;
-
-        VAOAllocator.INSTANCE.bind(vao);
-        if (!Config.skipList) {
-            GL11.glTexCoordPointer(2, 5126, 32, 12L);
-            GL11.glEnableClientState(32888);
-            GL11.glColorPointer(4, 5121, 32, 20L);
-            GL11.glEnableClientState(32886);
-            GL11.glEnableClientState(32884);
-            GL11.glVertexPointer(3, 5126, 32, 0L);
-        }
     }
 
     @Inject(at = @At("RETURN"), method = "updateRenderer")
     public void postUR(CallbackInfo ci) {
         if (!Config.vobPipeline) return;
         if (!Config.skipList) {
-            GL11.glDisableClientState(32888);
-            GL11.glDisableClientState(32886);
-            GL11.glDisableClientState(32884);
+//            GL11.glDisableClientState(32888);
+//            GL11.glDisableClientState(32886);
+//            GL11.glDisableClientState(32884);
         }
         tessellator.setTranslation(0, 0, 0);
         VAOAllocator.INSTANCE.bind(0);
@@ -130,14 +121,19 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
             return;
         }
 
-        if ((li - glRenderList) == 0) {
+        int l = li - glRenderList;
+        VAOAllocator.INSTANCE.bind(l == 0 ? vao1 : vao);
+//        if (!Config.skipList) {
+//        }
+
+        if (l == 0) {
             if (vbo1[0] != -1) {
                 ARBVertexBufferObject.glDeleteBuffersARB(vbo1[0]);
                 vbo1[0] = -1;
             }
 
             vbo1 = ((TesselatorExtensions) instance).genList(li, mod);
-            if (allowVao) vbo1[3] = vao;
+            if (allowVao) vbo1[3] = vao1;
         } else {
             if (vbo[0] != -1) {
                 ARBVertexBufferObject.glDeleteBuffersARB(vbo[0]);
@@ -147,8 +143,16 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
             vbo = ((TesselatorExtensions) instance).genList(li, mod);
             if (allowVao) vbo[3] = vao;
         }
+
+        GL11.glTexCoordPointer(2, 5126, 32, 12L);
+        GL11.glColorPointer(4, 5121, 32, 20L);
+        GL11.glVertexPointer(3, 5126, 32, 0L);
+        GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
+        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+
         // VAOs require proper shaders in order to work
-        allowVao = ChunkRenderHooks.postBakeChunk();
+//        allowVao = ChunkRenderHooks.postBakeChunk();
     }
 
     @Override
@@ -160,8 +164,8 @@ public abstract class ChunkRendererMixin implements ChunkRendererExtension {
             GL11.glPushMatrix();
             GL11.glTranslatef(posXMinus, posYMinus, posZMinus);
             if (allowVao) {
-                VAOAllocator.INSTANCE.bind(vao);
-                ARBVertexBufferObject.glBindBufferARB(34962, vob[0]);
+                VAOAllocator.INSTANCE.bind(i == 0 ? vao1 : vao);
+//                ARBVertexBufferObject.glBindBufferARB(34962, vob[0]);
 
                 if (vob[2] == 7 && true) {
                     GL11.glDrawArrays(4, 0, vob[1]);

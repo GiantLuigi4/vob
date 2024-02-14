@@ -165,9 +165,9 @@ public abstract class RenderGlobalMixin {
 
             GL11.glPushMatrix();
             GL11.glTranslated(-posX, -posY, -posZ);
-            GL11.glEnableClientState(32888);
-            GL11.glEnableClientState(32886);
-            GL11.glEnableClientState(32884);
+//            GL11.glEnableClientState(32888);
+//            GL11.glEnableClientState(32886);
+//            GL11.glEnableClientState(32884);
 
             for (int i = min; i < max; i++) {
                 ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
@@ -189,9 +189,9 @@ public abstract class RenderGlobalMixin {
                 }
             }
 
-            GL11.glDisableClientState(32888);
-            GL11.glDisableClientState(32886);
-            GL11.glDisableClientState(32884);
+//            GL11.glDisableClientState(32888);
+//            GL11.glDisableClientState(32886);
+//            GL11.glDisableClientState(32884);
             GL11.glPopMatrix();
         }
 
@@ -208,9 +208,9 @@ public abstract class RenderGlobalMixin {
 
                 GL11.glPushMatrix();
                 GL11.glTranslated(-posX, -posY, -posZ);
-                GL11.glEnableClientState(32888);
-                GL11.glEnableClientState(32886);
-                GL11.glEnableClientState(32884);
+//                GL11.glEnableClientState(32888);
+//                GL11.glEnableClientState(32886);
+//                GL11.glEnableClientState(32884);
 
                 batch.clear();
             }
@@ -226,9 +226,9 @@ public abstract class RenderGlobalMixin {
             if (Config.useBatching) {
                 batch.draw();
 
-                GL11.glDisableClientState(32888);
-                GL11.glDisableClientState(32886);
-                GL11.glDisableClientState(32884);
+//                GL11.glDisableClientState(32888);
+//                GL11.glDisableClientState(32886);
+//                GL11.glDisableClientState(32884);
                 GL11.glPopMatrix();
             }
         }
