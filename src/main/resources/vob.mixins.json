@@ -14,11 +14,11 @@
   ],
   "client": [
     "CameraSorterMixin",
+    "ChunkRendererComparatorMixin",
     "ChunkRendererMixin",
     "DisplayListMixin",
     "RenderGlobalMixin",
-    "TessellatorMixin",
-    "WorldRendererMixin"
+    "TessellatorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

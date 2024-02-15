@@ -51,9 +51,11 @@ public abstract class TessellatorMixin implements TesselatorExtensions {
     @Shadow
     protected abstract void reset();
 
-    @Shadow private IntBuffer vertexBuffers;
+    @Shadow
+    private IntBuffer vertexBuffers;
 
-    @Shadow private int vboCount;
+    @Shadow
+    private int vboCount;
 
     @Inject(at = @At("TAIL"), method = "<init>")
     public void postInit(int bufferSize, CallbackInfo ci) {
@@ -65,7 +67,7 @@ public abstract class TessellatorMixin implements TesselatorExtensions {
     }
 
     @Override
-    public int[] genList(int list, int mode) {
+    public int[] legacy$genList(int list, int mode) {
         int vbo = ARBVertexBufferObject.glGenBuffersARB();
         int vcount = vertexCount;
 
@@ -76,50 +78,27 @@ public abstract class TessellatorMixin implements TesselatorExtensions {
             this.intBuffer.put(this.rawBuffer, 0, this.rawBufferIndex);
             this.byteBuffer.position(0);
             this.byteBuffer.limit(this.rawBufferIndex * 4);
-            if (this.useVBO) {
-                ARBVertexBufferObject.glBindBufferARB(34962, vbo);
-                ARBVertexBufferObject.glBufferDataARB(34962, this.byteBuffer, 35040);
-            }
+
+            ARBVertexBufferObject.glBindBufferARB(34962, vbo);
+            ARBVertexBufferObject.glBufferDataARB(34962, this.byteBuffer, 35040);
 
             if (!Config.skipList) {
                 if (this.hasTexture) {
-                    if (this.useVBO) {
-                        GL11.glTexCoordPointer(2, 5126, 32, 12L);
-                    } else {
-                        this.floatBuffer.position(3);
-                        GL11.glTexCoordPointer(2, 32, (FloatBuffer) this.floatBuffer);
-                    }
-
+                    GL11.glTexCoordPointer(2, 5126, 32, 12L);
                     GL11.glEnableClientState(32888);
                 }
 
                 if (this.hasColor) {
-                    if (this.useVBO) {
-                        GL11.glColorPointer(4, 5121, 32, 20L);
-                    } else {
-                        this.byteBuffer.position(20);
-                        GL11.glColorPointer(4, true, 32, this.byteBuffer);
-                    }
+                    GL11.glColorPointer(4, 5121, 32, 20L);
                     GL11.glEnableClientState(32886);
                 }
 
                 if (this.hasNormals) {
-                    if (this.useVBO) {
-                        GL11.glNormalPointer(5120, 32, 24L);
-                    } else {
-                        this.byteBuffer.position(24);
-                        GL11.glNormalPointer(32, (ByteBuffer) this.byteBuffer);
-                    }
-
+                    GL11.glNormalPointer(5120, 32, 24L);
                     GL11.glEnableClientState(32885);
                 }
 
-                if (this.useVBO) {
-                    GL11.glVertexPointer(3, 5126, 32, 0L);
-                } else {
-                    this.floatBuffer.position(0);
-                    GL11.glVertexPointer(3, 32, (FloatBuffer) this.floatBuffer);
-                }
+                GL11.glVertexPointer(3, 5126, 32, 0L);
 
                 GL11.glEnableClientState(32884);
                 if (this.drawMode == 7 && convertQuadsToTriangles) {
@@ -148,5 +127,30 @@ public abstract class TessellatorMixin implements TesselatorExtensions {
         this.reset();
 
         return new int[]{vbo, vcount, dmode, 0};
+    }
+
+    @Override
+    public int genList(int list, int mode, int vbo) {
+        int vcount = vertexCount;
+
+        this.checkIsDrawing();
+        this.isDrawing = false;
+        if (this.vertexCount > 0) {
+            this.intBuffer.clear();
+            this.intBuffer.put(this.rawBuffer, 0, this.rawBufferIndex);
+            this.byteBuffer.position(0);
+            this.byteBuffer.limit(this.rawBufferIndex * 4);
+            ARBVertexBufferObject.glBindBufferARB(34962, vbo);
+            ARBVertexBufferObject.glBufferDataARB(34962, this.byteBuffer, 35040);
+
+            if (this.hasTexture) GL11.glTexCoordPointer(2, 5126, 32, 12L);
+            if (this.hasColor) GL11.glColorPointer(4, 5121, 32, 20L);
+            if (this.hasNormals) GL11.glNormalPointer(5120, 32, 24L);
+            GL11.glVertexPointer(3, 5126, 32, 0L);
+        }
+
+        this.reset();
+
+        return vcount;
     }
 }

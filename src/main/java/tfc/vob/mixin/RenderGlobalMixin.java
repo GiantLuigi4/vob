@@ -2,9 +2,12 @@ package tfc.vob.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.ChunkRenderer;
+import net.minecraft.client.render.ChunkRendererComparator;
 import net.minecraft.client.render.DisplayList;
 import net.minecraft.client.render.RenderGlobal;
 import net.minecraft.client.render.camera.ICamera;
+import net.minecraft.client.render.culling.CameraFrustum;
+import net.minecraft.core.util.collection.Pair;
 import net.minecraft.core.world.World;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +22,7 @@ import tfc.vob.chunk.Batch;
 import tfc.vob.chunk.ChunkBatch;
 import tfc.vob.itf.ChunkRendererExtension;
 
-import java.util.List;
+import java.util.*;
 
 @Mixin(value = RenderGlobal.class, remap = false)
 public abstract class RenderGlobalMixin {
@@ -48,19 +51,10 @@ public abstract class RenderGlobalMixin {
     public abstract void callAllDisplayLists(int renderPass, double renderPartialTicks);
 
     @Shadow
+    private List<ChunkRenderer> chunkRenderersToUpdate;
+
+    @Shadow
     private ChunkRenderer[] chunkRenderers;
-
-
-    @Shadow
-    private int renderChunksDeep;
-    @Shadow
-    private int renderChunksWide;
-    @Shadow
-    private int renderChunksTall;
-    @Shadow
-    private World worldObj;
-
-    ChunkBatch batch;
 
     /**
      * @author
@@ -71,170 +65,55 @@ public abstract class RenderGlobalMixin {
         this.glRenderLists.clear();
         int addedWorldRenderers = 0;
 
-        if (!Config.vobPipeline) {
-            for (int i = max - 1; i >= min; --i) {
-                if (renderPass == 0) {
-                    ++this.renderersLoaded;
-                    if (this.sortedChunkRenderers[i].skipRenderPass[renderPass]) {
-                        ++this.renderersSkippingRenderPass;
-                    } else if (!this.sortedChunkRenderers[i].isInFrustum) {
-                        ++this.renderersBeingClipped;
-                    } else if (this.occlusionEnabled && !this.sortedChunkRenderers[i].isVisible) {
-                        ++this.renderersBeingOccluded;
-                    } else {
-                        ++this.renderersBeingRendered;
-                    }
-                }
+        double posX = this.mc.activeCamera.getX((float) renderPartialTicks);
+        double posY = this.mc.activeCamera.getY((float) renderPartialTicks);
+        double posZ = this.mc.activeCamera.getZ((float) renderPartialTicks);
 
-                if (!this.sortedChunkRenderers[i].skipRenderPass[renderPass] && this.sortedChunkRenderers[i].isInFrustum && (!this.occlusionEnabled || this.sortedChunkRenderers[i].isVisible)) {
-                    int callList = this.sortedChunkRenderers[i].getGLCallListForPass(renderPass);
-                    if (callList >= 0) {
-                        this.glRenderLists.add(this.sortedChunkRenderers[i]);
-                        ++addedWorldRenderers;
-                    }
+//        int k1 = 0;
+        DisplayList[] lists = this.allDisplayLists;
+
+        int displayListIndex = -1;
+        for (DisplayList allDisplayList : allDisplayLists)
+            allDisplayList.clear();
+
+        for (int i = max - 1; i >= min; --i) {
+            if (renderPass == 0) {
+                ++this.renderersLoaded;
+                if (this.sortedChunkRenderers[i].skipRenderPass[renderPass]) {
+                    ++this.renderersSkippingRenderPass;
+                } else if (!this.sortedChunkRenderers[i].isInFrustum) {
+                    ++this.renderersBeingClipped;
+                } else if (this.occlusionEnabled && !this.sortedChunkRenderers[i].isVisible) {
+                    ++this.renderersBeingOccluded;
+                } else {
+                    ++this.renderersBeingRendered;
                 }
             }
 
-            double posX = this.mc.activeCamera.getX((float) renderPartialTicks);
-            double posY = this.mc.activeCamera.getY((float) renderPartialTicks);
-            double posZ = this.mc.activeCamera.getZ((float) renderPartialTicks);
-            int k1 = 0;
-            DisplayList[] lists = this.allDisplayLists;
+            if (!this.sortedChunkRenderers[i].skipRenderPass[renderPass] && this.sortedChunkRenderers[i].isInFrustum && (!this.occlusionEnabled || this.sortedChunkRenderers[i].isVisible)) {
+                int callList = this.sortedChunkRenderers[i].getGLCallListForPass(renderPass);
+                if (callList >= 0) {
+                    ChunkRenderer chunkRenderer = this.sortedChunkRenderers[i];
 
-            int displayListIndex;
-            for (DisplayList allDisplayList : allDisplayLists)
-                allDisplayList.clear();
+                    if (displayListIndex == -1 || !lists[displayListIndex].isSetToPos(chunkRenderer.posXMinus, chunkRenderer.posYMinus, chunkRenderer.posZMinus)) {
+                        displayListIndex++;
 
-            for (ChunkRenderer chunkRenderer : glRenderLists) {
-                displayListIndex = -1;
-
-                for (int i = 0; i < k1; ++i) {
-                    if (lists[i].isSetToPos(chunkRenderer.posXMinus, chunkRenderer.posYMinus, chunkRenderer.posZMinus)) {
-                        displayListIndex = i;
-                        break;
+                        lists[displayListIndex].setToPos(chunkRenderer.posXMinus, chunkRenderer.posYMinus, chunkRenderer.posZMinus, posX, posY, posZ);
                     }
-                }
 
-                if (displayListIndex < 0) {
-                    displayListIndex = k1++;
-                    lists[displayListIndex].setToPos(chunkRenderer.posXMinus, chunkRenderer.posYMinus, chunkRenderer.posZMinus, posX, posY, posZ);
-                }
+                    lists[displayListIndex].addCallToList(chunkRenderer.getGLCallListForPass(renderPass));
 
-                lists[displayListIndex].addCallToList(chunkRenderer.getGLCallListForPass(renderPass));
+                    ++addedWorldRenderers;
+                }
             }
-
-            this.callAllDisplayLists(renderPass, renderPartialTicks);
-
-            return addedWorldRenderers;
         }
 
-        if (Config.useBatching) {
-            int lx = Integer.MIN_VALUE;
-            int ly = Integer.MAX_VALUE;
-            for (int i = min; i < max; i++) {
-                ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
-                if (renderPass == 0) {
-                    ++this.renderersLoaded;
-                    if (sortedChunkRenderer.skipRenderPass[renderPass]) {
-                        ++this.renderersSkippingRenderPass;
-                    } else if (!sortedChunkRenderer.isInFrustum) {
-                        ++this.renderersBeingClipped;
-                    } else if (this.occlusionEnabled && !sortedChunkRenderer.isVisible) {
-                        ++this.renderersBeingOccluded;
-                    } else {
-                        ++this.renderersBeingRendered;
-                    }
-                }
-
-                if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
-                    if (lx != sortedChunkRenderer.posXMinus || ly != sortedChunkRenderer.posZMinus) {
-                        lx = sortedChunkRenderer.posXMinus;
-                        ly = sortedChunkRenderer.posZMinus;
-                        batch.nextColumn(lx, ly);
-                    }
-
-                    batch.add(((ChunkRendererExtension) sortedChunkRenderer).getVao(renderPass));
-
-                    addedWorldRenderers++;
-                }
-            }
-        } else {
-            double posX = this.mc.activeCamera.getX((float) renderPartialTicks);
-            double posY = this.mc.activeCamera.getY((float) renderPartialTicks);
-            double posZ = this.mc.activeCamera.getZ((float) renderPartialTicks);
-
-            GL11.glPushMatrix();
-            GL11.glTranslated(-posX, -posY, -posZ);
-//            GL11.glEnableClientState(32888);
-//            GL11.glEnableClientState(32886);
-//            GL11.glEnableClientState(32884);
-
-            for (int i = min; i < max; i++) {
-                ChunkRenderer sortedChunkRenderer = sortedChunkRenderers[i];
-                if (renderPass == 0) {
-                    ++this.renderersLoaded;
-                    if (sortedChunkRenderer.skipRenderPass[renderPass]) {
-                        ++this.renderersSkippingRenderPass;
-                    } else if (!sortedChunkRenderer.isInFrustum) {
-                        ++this.renderersBeingClipped;
-                    } else if (this.occlusionEnabled && !sortedChunkRenderer.isVisible) {
-                        ++this.renderersBeingOccluded;
-                    } else {
-                        ++this.renderersBeingRendered;
-                    }
-                }
-                if (!sortedChunkRenderer.skipRenderPass[renderPass] && sortedChunkRenderer.isInFrustum && (!this.occlusionEnabled || sortedChunkRenderer.isVisible)) {
-                    ((ChunkRendererExtension) sortedChunkRenderer).draw(renderPass);
-                    addedWorldRenderers++;
-                }
-            }
-
-//            GL11.glDisableClientState(32888);
-//            GL11.glDisableClientState(32886);
-//            GL11.glDisableClientState(32884);
-            GL11.glPopMatrix();
-        }
+        boolean fog = !(Boolean) this.mc.gameSettings.fog.value;
+        if (fog) GL11.glDisable(2912);
+        this.callAllDisplayLists(renderPass, renderPartialTicks);
+        if (fog) GL11.glEnable(2912);
 
         return addedWorldRenderers;
-    }
-
-    @Inject(method = "sortAndRender", at = @At("HEAD"))
-    public void preRender(ICamera camera, int renderPass, double renderPartialTicks, CallbackInfoReturnable<Integer> cir) {
-        if (Config.vobPipeline) {
-            if (Config.useBatching) {
-                double posX = this.mc.activeCamera.getX((float) renderPartialTicks);
-                double posY = this.mc.activeCamera.getY((float) renderPartialTicks);
-                double posZ = this.mc.activeCamera.getZ((float) renderPartialTicks);
-
-                GL11.glPushMatrix();
-                GL11.glTranslated(-posX, -posY, -posZ);
-//                GL11.glEnableClientState(32888);
-//                GL11.glEnableClientState(32886);
-//                GL11.glEnableClientState(32884);
-
-                batch.clear();
-            }
-        }
-
-        if (!(Boolean) this.mc.gameSettings.fog.value)
-            GL11.glDisable(2912);
-    }
-
-    @Inject(method = "sortAndRender", at = @At("RETURN"))
-    public void postRender(ICamera camera, int renderPass, double renderPartialTicks, CallbackInfoReturnable<Integer> cir) {
-        if (Config.vobPipeline) {
-            if (Config.useBatching) {
-                batch.draw();
-
-//                GL11.glDisableClientState(32888);
-//                GL11.glDisableClientState(32886);
-//                GL11.glDisableClientState(32884);
-                GL11.glPopMatrix();
-            }
-        }
-
-        if (!(Boolean) this.mc.gameSettings.fog.value)
-            GL11.glEnable(2912);
     }
 
     @Inject(at = @At("HEAD"), method = "loadRenderers")
@@ -248,9 +127,46 @@ public abstract class RenderGlobalMixin {
         }
     }
 
-    @Inject(at = @At("TAIL"), method = "loadRenderers")
-    public void postLoad(CallbackInfo ci) {
-        if (worldObj != null && Config.useBatching)
-            batch = new ChunkBatch(new Batch[Config.maxBatches], renderChunksTall);
-    }
+//    /**
+//     * @author
+//     * @reason
+//     */
+//    @Overwrite
+//    public boolean updateRenderers(ICamera camera) {
+//        if (chunkRenderersToUpdate.isEmpty())
+//            return true;
+//
+//        CameraFrustum frustum = new CameraFrustum(camera);
+//
+//        ChunkRendererComparator comparator = new ChunkRendererComparator(camera);
+//        float nearest = 256.f;
+//        int idx = 0;
+//        float actualNearest = Float.POSITIVE_INFINITY;
+//        int idxNearest = 0;
+//
+//        ListIterator<ChunkRenderer> rendererListIterator = chunkRenderersToUpdate.listIterator();
+//        while (rendererListIterator.hasNext()) {
+//            ChunkRenderer chunkRenderer = rendererListIterator.next();
+//
+//            float d = chunkRenderer.distanceToCameraSquared(camera);
+//            if (d < nearest) {
+//                chunkRenderer.updateRenderer();
+//                chunkRenderer.needsUpdate = false;
+//                rendererListIterator.remove();
+//            } else {
+//                if (d < actualNearest) {
+//                    actualNearest = d;
+//                    idxNearest = idx;
+//                }
+//            }
+//
+//            idx++;
+//        }
+//
+//        ChunkRenderer rdr = chunkRenderersToUpdate.remove(idxNearest);
+//        rdr.updateRenderer();
+//        rdr.needsUpdate = false;
+//
+//        return chunkRenderersToUpdate.isEmpty();
+//    }
 }

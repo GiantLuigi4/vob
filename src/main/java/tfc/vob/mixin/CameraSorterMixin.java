@@ -11,17 +11,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = CameraSorter.class, remap = false)
 public class CameraSorterMixin {
-	@Shadow @Final private double posX;
-	
-	@Shadow @Final private double posZ;
-	
-	@Inject(at = @At("HEAD"), method = "sortByDistanceToEntity", cancellable = true)
-	public void preSort(ChunkRenderer a, ChunkRenderer b, CallbackInfoReturnable<Integer> cir) {
-		double dx1 = (double)a.posXMinus + this.posX;
-		double dz1 = (double)a.posZMinus + this.posZ;
-		double dx2 = (double)b.posXMinus + this.posX;
-		double dz2 = (double)b.posZMinus + this.posZ;
-		int v = Double.compare(dx1 * dx1 + dz1 * dz1, dx2 * dx2 + dz2 * dz2);
-		if (v != 0) cir.setReturnValue(v);
-	}
+    @Shadow
+    @Final
+    private double posX;
+
+    @Shadow
+    @Final
+    private double posZ;
+
+    @Shadow @Final private double posY;
+
+    @Inject(at = @At("HEAD"), method = "sortByDistanceToEntity", cancellable = true)
+    public void preSort(ChunkRenderer a, ChunkRenderer b, CallbackInfoReturnable<Integer> cir) {
+        float dx1 = a.posXMinus + (float) this.posX;
+        float dz1 = a.posZMinus + (float) this.posZ;
+        float dx2 = b.posXMinus + (float) this.posX;
+        float dz2 = b.posZMinus + (float) this.posZ;
+
+		int v = Float.compare(dx1 * dx1 + dz1 * dz1, dx2 * dx2 + dz2 * dz2);
+
+        if (v != 0) cir.setReturnValue(v);
+        else {
+            float dy1 = a.posYMinus + (float) this.posY;
+            float dy2 = a.posYMinus + (float) this.posY;
+            cir.setReturnValue(
+                    Double.compare(dy1 * dy1, dy2 * dy2)
+            );
+        }
+    }
 }

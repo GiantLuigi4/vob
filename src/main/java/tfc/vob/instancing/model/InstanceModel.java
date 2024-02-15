@@ -80,7 +80,7 @@ public class InstanceModel {
                 );
             }
         }
-        vbo = ((TesselatorExtensions) tessellator).genList(0, 0);
+        vbo = ((TesselatorExtensions) tessellator).legacy$genList(0, 0);
         VAOAllocator.INSTANCE.bind(0);
     }
 
